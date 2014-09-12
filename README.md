@@ -30,7 +30,7 @@ The minimum number of targets to test. Note that v6pinger will abort if this num
 The maximum number of targets to test.  Note that v6pinger will fill the test series with randomly-selected targets if the `prefers` criteria doesn't produce enough targets. 
 
 ## ratio
-A multiplier to determine how many successful targets are required in order to declare victory.  A multipler of `0.5`, for example, would mean that half of the targets must be pingable.
+A multiplier to determine how many successful targets are required in order to declare victory.  A multiplier of `0.5`, for example, would mean that half of the targets must be pingable.
 
 ## sites_age
 The maximum age (in seconds) of the cached *list* after which a fresh copy will be otained.
@@ -43,7 +43,9 @@ $ ./v6pinger.py
 In my express case, I put it in a wrapper that's more or less like this :
 ```bash
 #!/usr/bin/bash
-cd /opt/v6pinger
+
+cd /opt/v6pinger/
+. ./.venv/bin/activate
 ./v6pinger.py
 if [[ $? -ne 0 ]]; then
     /etc/init.d/networking restart
