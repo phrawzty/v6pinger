@@ -42,17 +42,19 @@ $ ./v6pinger.py
 
 In my express case, I put it in a wrapper that's more or less like this :
 ```bash
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 cd /opt/v6pinger/
 . ./.venv/bin/activate
 ./v6pinger.py
 if [[ $? -ne 0 ]]; then
-    /etc/init.d/networking restart
+    echo "[ERROR] restarting dibbler" 1>&2
+    /sbin/service dibbler-client restart
 fi
+deactivate
 ```
 
 With a cron job to capture `STDERR` as necessary :
 ```bash
-*/5 * * * * root /opt/v6pinger/cron_wrapper.sh 2>&1 >/dev/null | logger -i -t v6pinger
+*/5 * * * * root /opt/v6pinger/cron_wrapper.sh > /dev/null | logger -i -t v6pinger
 ```
