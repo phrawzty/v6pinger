@@ -1,23 +1,16 @@
 #!/usr/bin/env python
 
 
-import re, json, os, time, random, subprocess
+import re, os, time, random, subprocess
 from sys import stderr
 import yaml
 import requests
 
 
-# OK let's roll!
-
 # Read the config.
 config = {}
 with open('config.yaml', 'r') as y:
     config = yaml.load(y)
-
-# Set up regexes.
-re_ignore = re.compile(config['re_ignore'])
-re_header = re.compile(config['re_header'])
-re_footer = re.compile(config['re_footer'])
 
 # Only download a new sites.js if the existing file is too old.
 refresh_sites = False
@@ -45,46 +38,34 @@ if refresh_sites:
             
             f.write(block)
 
-    # Write that nasty .js out to a nice .json file.
-    with open(config['sites_file'], 'r') as s:
-        with open(config['json_file'], 'w') as j:
-            for line in s:
-                if not re_ignore.match(line):
-                    if re_header.match(line):
-                        j.write('[{\n')
-                    elif re_footer.match(line):
-                        j.write('}]\n')
-                    else:
-                        j.write(line)
-
 else:
     print 'sites_file is fresh enough.'
 
 # Now inhale that json and make a useable primitive out of it.
 sites = {}
-with open(config['json_file'], 'r') as j:
-    sites = json.load(j)
+with open(config['sites_file'], 'r') as y:
+    sites = yaml.load(y)
 
 # Now build the list of sites to test.
 sites_to_test = {}
 
 # Parse "prefers" from config and see if any match.
-for site in sites:
+for site in sites.keys():
     if len(sites_to_test) >= config['max_test']:
         break
     if 'prefers' in config:
         for pref in config['prefers']:
-            if (pref in site) and (site['site'] not in sites_to_test):
-                if site[pref] in config['prefers'][pref]:
-                    print site['site'], 'selected because it matches', pref, config['prefers'][pref]
-                    sites_to_test[site['site']] = site['v6']
+            if pref in sites[site].keys():
+                if sites[site][pref] in config['prefers'][pref]:
+                    print site, 'picked because it matches', pref, config['prefers'][pref]
+                    sites_to_test['site'] = sites[site]['v6']
 
 # Randomly fill up the pool with other sites if necessaary.
 while len(sites_to_test) < config['max_test']:
-    site = random.choice(sites)
-    if site['site'] not in sites_to_test:
-        print site['site'], 'selected randomly.'
-        sites_to_test[site['site']] = site['v6']
+    site = random.choice(sites.keys())
+    if site not in sites_to_test:
+        print site, 'selected randomly.'
+        sites_to_test[site] = sites[site]['v6']
 
 # If there aren't enough useable sites, we must abort.
 if len(sites_to_test) < config['min_test']:
@@ -97,7 +78,7 @@ print 'Initiating test'
 # Build the target list.
 hosts = []
 for site in sites_to_test:
-    hosts.append(sites_to_test[site].split('/')[0])
+    hosts.append(sites_to_test[site].split('/')[2])
 
 # Pings away!
 pingable = 0
@@ -111,7 +92,6 @@ for host in hosts:
         pingable += 1
     else:
         print host, 'did not respond. :('
-
 
 preamble = '%s out of %s hosts responded; ' % (pingable, len(hosts))
 if pingable >= (len(hosts) * config['ratio']):
