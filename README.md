@@ -49,7 +49,7 @@ cd /opt/v6pinger/
 ./v6pinger.py
 if [[ $? -ne 0 ]]; then
     echo "[ERROR] restarting dibbler" 1>&2
-    /sbin/service dibbler-client restart
+    /usr/sbin/service dibbler-client restart
 fi
 deactivate
 ```
