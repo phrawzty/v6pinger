@@ -30,6 +30,8 @@ if refresh_sites:
 
         if not r.ok:
             stderr.write('Could not obtain sites_file. Sadness prevails.\n')
+            f.close()
+            os.remove(config['sites_file'])
             exit(1)
 
         for block in r.iter_content(1024):
@@ -100,4 +102,4 @@ if pingable >= (len(hosts) * config['ratio']):
 else:
     message = preamble + 'FAIL FAIL FAIL!\n'
     stderr.write(message)
-    exit(1)
+    exit(2)
